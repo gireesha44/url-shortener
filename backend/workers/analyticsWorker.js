@@ -36,6 +36,7 @@ const startWorker = async () => {
   const worker = new Worker('analytics', processClick, {
     connection: {
       url: process.env.REDIS_URL,
+      tls: {},
     },
     concurrency: 5,
   });

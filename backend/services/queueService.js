@@ -1,18 +1,28 @@
 const { Queue } = require('bullmq');
+require('dotenv').config();
 
-const analyticsQueue = new Queue('analytics', {
-  connection: {
-    url: process.env.REDIS_URL,
-  },
-});
+let analyticsQueue = null;
 
-analyticsQueue.on('error', (err) => {
-  console.error('Queue connection error:', err.message);
-});
+const getQueue = () => {
+  if (!analyticsQueue) {
+    analyticsQueue = new Queue('analytics', {
+      connection: {
+        url: process.env.REDIS_URL,
+        tls: {},
+      },
+    });
+
+    analyticsQueue.on('error', (err) => {
+      console.error('Queue connection error:', err.message);
+    });
+  }
+  return analyticsQueue;
+};
 
 const addClickJob = async (jobData) => {
   try {
-    const job = await analyticsQueue.add('click', jobData, {
+    const queue = getQueue();
+    const job = await queue.add('click', jobData, {
       attempts: 3,
       backoff: {
         type: 'exponential',
