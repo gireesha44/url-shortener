@@ -45,7 +45,6 @@ const urlSchema = new mongoose.Schema(
   }
 );
 
-// Auto-expire URLs using MongoDB TTL index
 urlSchema.index(
   { expiresAt: 1 },
   { expireAfterSeconds: 0, partialFilterExpression: { expiresAt: { $ne: null } } }

@@ -7,8 +7,9 @@ const {
   deleteUrl,
 } = require('../controllers/urlController');
 const { protect } = require('../middleware/auth');
+const { createUrlLimiter } = require('../middleware/rateLimiter');
 
-router.post('/shorten', protect, createShortUrl);
+router.post('/shorten', protect, createUrlLimiter, createShortUrl);
 router.get('/my-urls', protect, getMyUrls);
 router.delete('/:shortCode', protect, deleteUrl);
 

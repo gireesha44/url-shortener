@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { connectRedis } = require('./config/redis');
 const { redirectUrl } = require('./controllers/urlController');
-
+const { generalLimiter, authLimiter, createUrlLimiter } = require('./middleware/rateLimiter');
 
 dotenv.config();
 
@@ -17,9 +17,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
+app.use(generalLimiter);
+
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/url', urlRoutes);
 app.use('/api/analytics', analyticsRoutes);
+
 
 app.get('/:shortCode', redirectUrl);
 app.get('/', (req, res) => {
