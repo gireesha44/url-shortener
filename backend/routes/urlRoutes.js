@@ -5,12 +5,14 @@ const {
   redirectUrl,
   getMyUrls,
   deleteUrl,
+  unlockUrl,
 } = require('../controllers/urlController');
 const { protect } = require('../middleware/auth');
 const { createUrlLimiter } = require('../middleware/rateLimiter');
 
 router.post('/shorten', protect, createUrlLimiter, createShortUrl);
 router.get('/my-urls', protect, getMyUrls);
+router.post('/unlock/:shortCode', unlockUrl);
 router.delete('/:shortCode', protect, deleteUrl);
 
 module.exports = router;

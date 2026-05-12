@@ -3,6 +3,7 @@ const { generateShortCode } = require('../utils/base62');
 const { setCache, getCache } = require('../services/cacheService');
 const { addClickJob } = require('../services/queueService');
 const UAParser = require('ua-parser-js');
+const bcrypt = require('bcryptjs');
 
 const isValidUrl = (string) => {
   try {
@@ -26,7 +27,7 @@ const validateUrl = [
 ];
 const createShortUrl = async (req, res, next) => {
   try {
-    const { originalUrl, customCode, expiresAt } = req.body;
+    const { originalUrl, customCode, expiresAt, tags, password } = req.body;
 
     if (!originalUrl) {
       return res.status(400).json({
@@ -62,15 +63,26 @@ const createShortUrl = async (req, res, next) => {
       }
     }
 
+    let hashedPassword = null;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     const url = await Url.create({
       originalUrl,
       shortCode,
       customCode: customCode || null,
       user: req.user._id,
       expiresAt: expiresAt || null,
+      tags: tags || [],
+      password: hashedPassword,
     });
 
-    await setCache(shortCode, originalUrl);
+    if (!password) {
+      setCache(shortCode, { originalUrl, urlId: url._id }).catch(err => {
+        console.error('Background cache sync failed:', err.message);
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -92,11 +104,11 @@ const redirectUrl = async (req, res, next) => {
   try {
     const { shortCode } = req.params;
 
-    const cachedUrl = await getCache(shortCode);
+    const cacheData = await getCache(shortCode);
 
-    if (cachedUrl) {
-      logClick(req, shortCode, null);
-      return res.redirect(cachedUrl);
+    if (cacheData) {
+      logClick(req, shortCode, cacheData.urlId);
+      return res.redirect(cacheData.originalUrl);
     }
 
     const url = await Url.findOne({ shortCode, isActive: true });
@@ -108,6 +120,10 @@ const redirectUrl = async (req, res, next) => {
       });
     }
 
+    if (url.password) {
+      return res.redirect(`http://localhost:5173/unlock/${shortCode}`);
+    }
+
     if (url.expiresAt && url.expiresAt < new Date()) {
       return res.status(410).json({
         success: false,
@@ -115,7 +131,7 @@ const redirectUrl = async (req, res, next) => {
       });
     }
 
-    await setCache(shortCode, url.originalUrl);
+    await setCache(shortCode, { originalUrl: url.originalUrl, urlId: url._id });
 
     await Url.findByIdAndUpdate(url._id, { $inc: { clicks: 1 } });
 
@@ -192,9 +208,53 @@ const deleteUrl = async (req, res, next) => {
   }
 };
 
+const unlockUrl = async (req, res, next) => {
+  try {
+    const { shortCode } = req.params;
+    const { password } = req.body;
+
+    const url = await Url.findOne({ shortCode, isActive: true });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: 'Short URL not found',
+      });
+    }
+
+    if (!url.password) {
+      return res.status(200).json({
+        success: true,
+        data: { originalUrl: url.originalUrl },
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, url.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password for this route',
+      });
+    }
+
+    await Url.findByIdAndUpdate(url._id, { $inc: { clicks: 1 } });
+    logClick(req, shortCode, url._id);
+
+    res.status(200).json({
+      success: true,
+      data: { originalUrl: url.originalUrl },
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createShortUrl,
   redirectUrl,
   getMyUrls,
   deleteUrl,
+  unlockUrl,
 };

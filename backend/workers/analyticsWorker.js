@@ -10,7 +10,19 @@ const connectDB = async () => {
 };
 
 const processClick = async (job) => {
-  const { shortCode, urlId, ipAddress, device, browser, referrer, clickedAt } = job.data;
+  let { shortCode, urlId, ipAddress, device, browser, referrer, clickedAt } = job.data;
+
+  // Fallback for old cache data missing urlId
+  if (!urlId) {
+    const url = await Url.findOne({ shortCode });
+    if (url) urlId = url._id;
+  }
+
+  // If we still don't have a urlId, we can't create a valid analytics entry
+  if (!urlId) {
+    console.error(`Skipping click for ${shortCode}: URL ID not found`);
+    return;
+  }
 
   await Analytics.create({
     urlId,

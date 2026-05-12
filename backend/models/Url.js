@@ -39,6 +39,14 @@ const urlSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    password: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

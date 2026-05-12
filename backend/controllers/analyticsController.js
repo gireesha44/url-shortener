@@ -29,6 +29,12 @@ const getUrlAnalytics = async (req, res, next) => {
       { $group: { _id: '$browser', count: { $sum: 1 } } },
     ]);
 
+    const referrerBreakdown = await Analytics.aggregate([
+      { $match: { shortCode } },
+      { $group: { _id: '$referrer', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
     const clicksOverTime = await Analytics.aggregate([
       { $match: { shortCode } },
       {
@@ -48,6 +54,7 @@ const getUrlAnalytics = async (req, res, next) => {
         totalClicks: url.clicks,
         deviceBreakdown,
         browserBreakdown,
+        referrerBreakdown,
         clicksOverTime,
         recentClicks: clicks.slice(0, 10),
       },
@@ -70,6 +77,12 @@ const getDashboardStats = async (req, res, next) => {
       { $group: { _id: '$device', count: { $sum: 1 } } },
     ]);
 
+    const referrerBreakdown = await Analytics.aggregate([
+      { $match: { shortCode: { $in: shortCodes } } },
+      { $group: { _id: '$referrer', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
     const clicksOverTime = await Analytics.aggregate([
       { $match: { shortCode: { $in: shortCodes } } },
       {
@@ -89,6 +102,7 @@ const getDashboardStats = async (req, res, next) => {
         totalUrls: urls.length,
         totalClicks,
         deviceBreakdown,
+        referrerBreakdown,
         clicksOverTime,
       },
     });

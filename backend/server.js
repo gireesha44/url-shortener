@@ -18,18 +18,19 @@ const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
-app.use(errorHandler);
 app.use(generalLimiter);
 
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/url', urlRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
 
 app.get('/:shortCode', redirectUrl);
 app.get('/', (req, res) => {
   res.json({ message: 'URL Shortener API is running' });
 });
+
+// Error handlers should be last
+app.use(errorHandler);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -40,13 +41,16 @@ app.use((err, req, res, next) => {
 });
 
 const startServer = async () => {
-  await connectDB();
-  await connectRedis();
-
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 5001;
+  
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
   });
+
+  // Connect to DB and Redis in the background
+  connectDB().then(() => console.log('✅ MongoDB connected.')).catch(err => console.error('❌ MongoDB fail:', err));
+  connectRedis().then(() => console.log('✅ Redis connected.')).catch(err => console.error('❌ Redis fail:', err));
 };
 
 

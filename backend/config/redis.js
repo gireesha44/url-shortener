@@ -18,8 +18,7 @@ const connectRedis = async () => {
 
     await redisClient.connect();
   } catch (error) {
-    console.error(`Redis Connection Error: ${error.message}`);
-    process.exit(1);
+    console.warn(`⚠️ Redis Connection Failed: ${error.message}. Running in DB-only mode.`);
   }
 };
 
