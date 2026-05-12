@@ -12,7 +12,18 @@ const isValidUrl = (string) => {
     return false;
   }
 };
+const { body, validationResult } = require('express-validator');
 
+const validateUrl = [
+  body('originalUrl')
+    .isURL({ protocols: ['http', 'https'], require_protocol: true })
+    .withMessage('Please provide a valid URL with http or https'),
+  body('customCode')
+    .optional()
+    .isAlphanumeric()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Custom code must be 3-20 alphanumeric characters'),
+];
 const createShortUrl = async (req, res, next) => {
   try {
     const { originalUrl, customCode, expiresAt } = req.body;

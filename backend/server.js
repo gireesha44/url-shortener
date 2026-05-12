@@ -5,18 +5,20 @@ const connectDB = require('./config/db');
 const { connectRedis } = require('./config/redis');
 const { redirectUrl } = require('./controllers/urlController');
 const { generalLimiter, authLimiter, createUrlLimiter } = require('./middleware/rateLimiter');
+const helmet = require('helmet');
 
 dotenv.config();
 
 const authRoutes = require('./routes/authRoutes');
 const urlRoutes = require('./routes/urlRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-
+const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 app.use(cors());
+app.use(helmet());
 app.use(express.json());
-
+app.use(errorHandler);
 app.use(generalLimiter);
 
 app.use('/api/auth', authLimiter, authRoutes);
