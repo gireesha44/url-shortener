@@ -12,6 +12,7 @@ dotenv.config();
 const authRoutes = require('./routes/authRoutes');
 const urlRoutes = require('./routes/urlRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const apiKeyRoutes = require('./routes/apiKeyRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(generalLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/url', urlRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/keys', apiKeyRoutes);
 
 app.get('/:shortCode', redirectUrl);
 app.get('/', (req, res) => {

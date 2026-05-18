@@ -19,6 +19,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      webhookUrl: user.webhookUrl,
     },
   });
 };
@@ -102,8 +103,41 @@ const getMe = async (req, res, next) => {
       id: req.user._id,
       name: req.user.name,
       email: req.user.email,
+      webhookUrl: req.user.webhookUrl,
     },
   });
 };
 
-module.exports = { register, login, getMe };
+const updateWebhook = async (req, res, next) => {
+  try {
+    const { webhookUrl } = req.body;
+
+    if (webhookUrl && !webhookUrl.startsWith('http://') && !webhookUrl.startsWith('https://')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid webhook URL format. Must start with http:// or https://',
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { webhookUrl: webhookUrl || '' },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Webhook URL updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        webhookUrl: user.webhookUrl,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, getMe, updateWebhook };

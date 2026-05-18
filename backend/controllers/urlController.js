@@ -251,10 +251,107 @@ const unlockUrl = async (req, res, next) => {
   }
 };
 
+const bulkShortenUrl = async (req, res, next) => {
+  try {
+    const { urls, expiresAt, tags, password } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a non-empty array of URLs',
+      });
+    }
+
+    if (urls.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bulk shortening is limited to 100 URLs per request',
+      });
+    }
+
+    let hashedPassword = null;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const validUrls = urls.filter(url => isValidUrl(url));
+    if (validUrls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'None of the provided URLs are valid',
+      });
+    }
+
+    let shortCodes = [];
+    let attempts = 0;
+    
+    while (shortCodes.length < validUrls.length && attempts < 10) {
+      attempts++;
+      const needed = validUrls.length - shortCodes.length;
+      const batchCodes = [];
+      for (let i = 0; i < needed; i++) {
+        batchCodes.push(generateShortCode(6));
+      }
+
+      const existing = await Url.find({ shortCode: { $in: batchCodes } });
+      const existingCodes = new Set(existing.map(u => u.shortCode));
+      
+      for (const code of batchCodes) {
+        if (!existingCodes.has(code) && !shortCodes.includes(code)) {
+          shortCodes.push(code);
+        }
+      }
+    }
+
+    if (shortCodes.length < validUrls.length) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate unique short codes',
+      });
+    }
+
+    const documents = validUrls.map((originalUrl, index) => ({
+      originalUrl,
+      shortCode: shortCodes[index],
+      user: req.user._id,
+      expiresAt: expiresAt || null,
+      tags: tags || [],
+      password: hashedPassword,
+    }));
+
+    const createdUrls = await Url.insertMany(documents);
+
+    if (!password) {
+      createdUrls.forEach(url => {
+        setCache(url.shortCode, { originalUrl: url.originalUrl, urlId: url._id }).catch(err => {
+          console.error(err.message);
+        });
+      });
+    }
+
+    const responseData = createdUrls.map(url => ({
+      originalUrl: url.originalUrl,
+      shortUrl: `${process.env.BASE_URL}/${url.shortCode}`,
+      shortCode: url.shortCode,
+      expiresAt: url.expiresAt,
+      createdAt: url.createdAt,
+    }));
+
+    res.status(201).json({
+      success: true,
+      data: responseData,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createShortUrl,
   redirectUrl,
   getMyUrls,
   deleteUrl,
   unlockUrl,
+  bulkShortenUrl,
 };

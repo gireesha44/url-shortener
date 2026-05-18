@@ -5,7 +5,8 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
-import UnlockPage from './pages/UnlockPage';
+import PasswordGate from './pages/PasswordGate';
+import BulkShortener from './pages/BulkShortener';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -18,8 +19,9 @@ const App = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/unlock/:shortCode" element={<UnlockPage />} />
+      <Route path="/unlock/:shortCode" element={<PasswordGate />} />
       <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+      <Route path="/bulk-shorten" element={<PrivateRoute><BulkShortener /></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/analytics/:shortCode" element={<PrivateRoute><Analytics /></PrivateRoute>} />
     </Routes>

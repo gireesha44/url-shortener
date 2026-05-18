@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getUrlAnalytics } from '../services/api';
+import { getUrlAnalytics, getUrlHourlyAnalytics } from '../services/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area 
@@ -16,11 +16,19 @@ import { cn } from '../utils/cn';
 const Analytics = () => {
   const { shortCode } = useParams();
   const [data, setData] = useState(null);
+  const [hourlyData, setHourlyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUrlAnalytics(shortCode)
-      .then((res) => setData(res.data.data))
+    setLoading(true);
+    Promise.all([
+      getUrlAnalytics(shortCode),
+      getUrlHourlyAnalytics(shortCode)
+    ])
+      .then(([resAnalytics, resHourly]) => {
+        setData(resAnalytics.data.data);
+        setHourlyData(resHourly.data.data);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [shortCode]);
@@ -39,6 +47,14 @@ const Analytics = () => {
       <Link to="/" className="btn-primary h-12 px-8 text-sm">Return to Dashboard</Link>
     </div>
   );
+
+  const formattedHourlyData = Array.from({ length: 24 }, (_, hour) => {
+    const match = hourlyData.find(item => item._id === hour);
+    return {
+      hour: `${hour.toString().padStart(2, '0')}:00`,
+      clicks: match ? match.count : 0
+    };
+  });
 
   return (
     <div className="min-h-screen bg-[#F7FAFC] font-sans text-text selection:bg-primary/30 pb-20">
@@ -77,7 +93,6 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-10">
           {[
             { icon: MousePointer2, label: 'Total Clicks', val: data.totalClicks, color: 'text-primary', bg: 'bg-primary/10' },
@@ -104,7 +119,6 @@ const Analytics = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Chart */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -170,7 +184,6 @@ const Analytics = () => {
             </div>
           </motion.div>
 
-          {/* Device & Browser Sidebars */}
           <div className="space-y-8">
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
@@ -257,7 +270,63 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Recent Events Table */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white border-2 border-border rounded-3xl p-8 shadow-sm mt-8"
+        >
+          <div className="flex items-center justify-between mb-10">
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-text/80">Hourly Click Distribution</h3>
+            <div className="flex items-center gap-3">
+              <span className="h-3 w-3 rounded-full bg-[#7C3AED] shadow-sm" />
+              <span className="text-[10px] font-black text-muted uppercase tracking-widest">Clicks By Hour</span>
+            </div>
+          </div>
+
+          <div className="h-[280px] w-full">
+            {formattedHourlyData.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-muted font-bold text-sm italic">
+                Waiting for data...
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={formattedHourlyData}>
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E2E8F0" />
+                  <XAxis 
+                    dataKey="hour" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#4A5568', fontWeight: 800 }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#4A5568', fontWeight: 800 }} 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#FFFFFF', 
+                      borderColor: '#E2E8F0',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      color: '#1A202C',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    }} 
+                  />
+                  <Bar 
+                    dataKey="clicks" 
+                    fill="#7C3AED" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

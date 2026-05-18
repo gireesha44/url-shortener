@@ -2,6 +2,7 @@ const { Worker } = require('bullmq');
 const mongoose = require('mongoose');
 const Analytics = require('../models/Analytics');
 const Url = require('../models/Url');
+const User = require('../models/User');
 require('dotenv').config();
 
 const connectDB = async () => {
@@ -12,13 +13,11 @@ const connectDB = async () => {
 const processClick = async (job) => {
   let { shortCode, urlId, ipAddress, device, browser, referrer, clickedAt } = job.data;
 
-  // Fallback for old cache data missing urlId
   if (!urlId) {
     const url = await Url.findOne({ shortCode });
     if (url) urlId = url._id;
   }
 
-  // If we still don't have a urlId, we can't create a valid analytics entry
   if (!urlId) {
     console.error(`Skipping click for ${shortCode}: URL ID not found`);
     return;
@@ -35,8 +34,30 @@ const processClick = async (job) => {
     country: 'unknown',
   });
 
-  if (urlId) {
-    await Url.findByIdAndUpdate(urlId, { $inc: { clicks: 1 } });
+  const url = await Url.findByIdAndUpdate(urlId, { $inc: { clicks: 1 } }).populate('user');
+
+  if (url && url.user && url.user.webhookUrl) {
+    try {
+      await fetch(url.user.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event: 'url.click',
+          data: {
+            shortCode,
+            ipAddress,
+            device: ['desktop', 'mobile', 'tablet'].includes(device) ? device : 'unknown',
+            browser: browser || 'unknown',
+            referrer: referrer || 'direct',
+            clickedAt: new Date(clickedAt),
+          }
+        }),
+      });
+    } catch (webhookError) {
+      console.error(`Webhook delivery failed: ${webhookError.message}`);
+    }
   }
 
   console.log(`Processed click for: ${shortCode}`);

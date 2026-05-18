@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { createShortUrl, getMyUrls, deleteUrl } from '../services/api';
 import Navbar from '../components/Navbar/Navbar';
 import URLForm from '../components/URLForm/URLForm';
 import URLCard from '../components/URLCard/URLCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, ListFilter, Search, Info, TrendingUp } from 'lucide-react';
+import { Layers, ListFilter, Search, Info, TrendingUp, Sparkles } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 const Home = () => {
@@ -80,9 +81,12 @@ const Home = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl font-black tracking-tight text-text mb-6"
+            className="text-5xl font-black tracking-tight text-text mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            Your <span className="text-primary">Link</span> Manager
+            <span>Your <span className="text-primary">Link</span> Manager</span>
+            <Link to="/bulk-shorten" className="btn-secondary h-11 px-5 text-xs font-black uppercase tracking-widest flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-sm border-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Bulk Shortener
+            </Link>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}

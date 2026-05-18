@@ -51,6 +51,7 @@ const getUrlAnalytics = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
+        originalUrl: url.originalUrl,
         totalClicks: url.clicks,
         deviceBreakdown,
         browserBreakdown,
@@ -112,4 +113,40 @@ const getDashboardStats = async (req, res, next) => {
   }
 };
 
-module.exports = { getUrlAnalytics, getDashboardStats };
+const getHourlyAnalytics = async (req, res, next) => {
+  try {
+    const { shortCode } = req.params;
+
+    const url = await Url.findOne({
+      shortCode,
+      user: req.user._id,
+    });
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: 'URL not found',
+      });
+    }
+
+    const hourlyClicks = await Analytics.aggregate([
+      { $match: { shortCode } },
+      {
+        $group: {
+          _id: { $hour: '$clickedAt' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: hourlyClicks,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUrlAnalytics, getDashboardStats, getHourlyAnalytics };
