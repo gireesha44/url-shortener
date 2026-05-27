@@ -3,7 +3,7 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/DashBoard';
 import Analytics from './pages/Analytics';
 import PasswordGate from './pages/PasswordGate';
 import BulkShortener from './pages/BulkShortener';
