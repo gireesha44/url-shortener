@@ -4,7 +4,7 @@ import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Link as LinkIcon, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Zap, Database, BarChart3 } from 'lucide-react';
-import { cn } from '../utils/cn';
+
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });

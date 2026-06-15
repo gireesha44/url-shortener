@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Send, Hash, Calendar, AlertCircle, CheckCircle2, TrendingUp, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../utils/cn';
 
 const URLForm = ({ onSubmit, loading, error, success }) => {
   const [form, setForm] = useState({ originalUrl: '', customCode: '', expiresAt: '', tags: '', password: '' });

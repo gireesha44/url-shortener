@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createShortUrl, getMyUrls, deleteUrl } from '../services/api';
@@ -6,7 +7,6 @@ import URLForm from '../components/URLForm/URLForm';
 import URLCard from '../components/URLCard/URLCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, ListFilter, Search, Info, TrendingUp, Sparkles } from 'lucide-react';
-import { cn } from '../utils/cn';
 
 const Home = () => {
   const [urls, setUrls] = useState([]);
@@ -14,10 +14,6 @@ const Home = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchUrls();
-  }, []);
 
   const fetchUrls = async () => {
     try {
@@ -27,6 +23,10 @@ const Home = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchUrls();
+  }, []);
 
   const handleCreateUrl = async (formData) => {
     setLoading(true);
@@ -49,6 +49,7 @@ const Home = () => {
       await deleteUrl(shortCode);
       fetchUrls();
     } catch (err) {
+      console.error(err);
       alert('Failed to delete link');
     }
   };

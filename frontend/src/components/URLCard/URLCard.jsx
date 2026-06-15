@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Copy, BarChart3, Trash2, QrCode, ExternalLink, 
-  Tag, MousePointer2, Calendar, Clock, CheckCircle2 
+  MousePointer2, Calendar, Clock, CheckCircle2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';

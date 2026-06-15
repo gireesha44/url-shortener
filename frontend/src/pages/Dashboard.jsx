@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboardStats, getMyApiKeys, generateApiKey, revokeApiKey, getMe, updateWebhookUrl } from '../services/api';
@@ -26,8 +27,10 @@ const Dashboard = () => {
   const [webhookStatus, setWebhookStatus] = useState('');
   const [webhookError, setWebhookError] = useState('');
 
-  const fetchStats = () => {
-    setLoading(true);
+  const fetchStats = (force = false) => {
+    if (force) {
+      setLoading(true);
+    }
     getDashboardStats()
       .then((res) => setStats(res.data.data))
       .catch(console.error)
@@ -47,7 +50,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchStats(false);
     fetchApiKeys();
     fetchUser();
   }, []);
@@ -74,6 +77,7 @@ const Dashboard = () => {
       fetchApiKeys();
       if (generatedKey) setGeneratedKey('');
     } catch (err) {
+      console.error(err);
       alert('Failed to revoke API key');
     }
   };
@@ -92,7 +96,7 @@ const Dashboard = () => {
   };
 
   const handleForceRefresh = () => {
-    fetchStats();
+    fetchStats(true);
     fetchApiKeys();
     fetchUser();
   };
@@ -308,7 +312,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 {!stats?.referrerBreakdown || stats.referrerBreakdown.length === 0 ? (
                   <p className="text-xs text-muted font-bold italic">Waiting for activity...</p>
-                ) : stats.referrerBreakdown.slice(0, 5).map((r, i) => (
+                ) : stats.referrerBreakdown.slice(0, 5).map((r) => (
                   <div key={r._id} className="flex items-center justify-between group cursor-default">
                     <div className="flex items-center gap-4">
                       <div className="h-2 w-2 rounded-full bg-primary-soft shadow-sm" />

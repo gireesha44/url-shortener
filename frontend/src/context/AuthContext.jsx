@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getMe } from '../services/api';
 
@@ -5,7 +6,9 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    return !!localStorage.getItem('token');
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -14,8 +17,6 @@ export const AuthProvider = ({ children }) => {
         .then((res) => setUser(res.data.user))
         .catch(() => localStorage.removeItem('token'))
         .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
     }
   }, []);
 

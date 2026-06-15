@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { unlockUrl } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, ShieldAlert, ArrowRight, Activity, Terminal } from 'lucide-react';
 
 const UnlockPage = () => {
   const { shortCode } = useParams();
-  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

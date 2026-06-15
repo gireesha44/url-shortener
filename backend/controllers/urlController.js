@@ -121,7 +121,8 @@ const redirectUrl = async (req, res, next) => {
     }
 
     if (url.password) {
-      return res.redirect(`http://localhost:5173/unlock/${shortCode}`);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      return res.redirect(`${frontendUrl}/unlock/${shortCode}`);
     }
 
     if (url.expiresAt && url.expiresAt < new Date()) {

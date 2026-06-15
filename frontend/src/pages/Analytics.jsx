@@ -9,18 +9,25 @@ import Navbar from '../components/Navbar/Navbar';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, MousePointer2, Smartphone, Globe, 
-  Clock, Activity, Calendar, Share2, ExternalLink 
+  Clock, Share2, ExternalLink 
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 const Analytics = () => {
   const { shortCode } = useParams();
+  const [prevShortCode, setPrevShortCode] = useState(shortCode);
   const [data, setData] = useState(null);
   const [hourlyData, setHourlyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  if (shortCode !== prevShortCode) {
+    setPrevShortCode(shortCode);
     setLoading(true);
+    setData(null);
+    setHourlyData([]);
+  }
+
+  useEffect(() => {
     Promise.all([
       getUrlAnalytics(shortCode),
       getUrlHourlyAnalytics(shortCode)
@@ -226,7 +233,7 @@ const Analytics = () => {
               <div className="space-y-5">
                 {(!data.browserBreakdown || data.browserBreakdown.length === 0) ? (
                   <p className="text-xs text-muted font-bold italic">Waiting for inbound data...</p>
-                ) : data.browserBreakdown.map((b, i) => (
+                ) : data.browserBreakdown.map((b) => (
                   <div key={b._id} className="flex items-center justify-between group cursor-default">
                     <div className="flex items-center gap-4">
                       <div className="h-2 w-2 rounded-full bg-primary shadow-sm group-hover:scale-150 transition-transform" />
@@ -250,7 +257,7 @@ const Analytics = () => {
               <div className="space-y-5">
                 {(!data.referrerBreakdown || data.referrerBreakdown.length === 0) ? (
                   <p className="text-xs text-muted font-bold italic">No sources detected yet</p>
-                ) : data.referrerBreakdown.map((r, i) => (
+                ) : data.referrerBreakdown.map((r) => (
                   <div key={r._id} className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-black text-text/70 truncate max-w-[150px]">{r._id.replace('http://', '').replace('https://', '')}</span>
