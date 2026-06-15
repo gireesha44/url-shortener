@@ -22,10 +22,11 @@ const App = () => {
       <Route path="/unlock/:shortCode" element={<PasswordGate />} />
       <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
       <Route path="/bulk-shorten" element={<PrivateRoute><BulkShortener /></PrivateRoute>} />
-      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/Dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/analytics/:shortCode" element={<PrivateRoute><Analytics /></PrivateRoute>} />
     </Routes>
   );
 };
 
 export default App;
+
